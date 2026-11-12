@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Lumi helps beginners turn an idea into a clearer AI prompt, and explains why the prompt improved."
+    />
+    <meta name="theme-color" content="#f6f4ef" />
+    <title>Lumi — Make AI easier to understand.</title>
+    <script>
+      ;(function () {
+        try {
+          var root = document.documentElement
+          var theme = localStorage.getItem("lumi-theme")
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+          var dark = theme === "dark" || ((theme === "system" || !theme) && prefersDark)
+          root.classList.toggle("dark", dark)
+          root.style.colorScheme = dark ? "dark" : "light"
+          var prefs = JSON.parse(localStorage.getItem("lumi-preferences") || "{}")
+          var contrastMore = window.matchMedia("(prefers-contrast: more)").matches
+          if (prefs.contrast) root.dataset.contrast = prefs.contrast
+          if (
+            prefs.contrast === "high" ||
+            ((prefs.contrast === "system" || !prefs.contrast) && contrastMore)
+          ) {
+            root.classList.add("hc")
+          }
+          if (prefs.fontScale) root.dataset.fontScale = prefs.fontScale
+          if (prefs.motion) root.dataset.motion = prefs.motion
+          if (prefs.motion === "reduce") root.classList.add("reduce")
+        } catch (error) {
+          /* Preferences are optional. The defaults still render. */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

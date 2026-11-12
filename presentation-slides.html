@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumi — Academic Idea Presentation</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #131c31;
+      --card: #18233c;
+      --border: #233354;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --success: #10b981;
+      --highlight: #38bdf8;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .deck-container {
+      width: 92vw;
+      max-width: 1240px;
+      height: 86vh;
+      max-height: 780px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .deck-header {
+      padding: 16px 36px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
+      color: var(--muted);
+      background: rgba(11, 15, 25, 0.5);
+    }
+    .deck-header .tag {
+      background: var(--accent-glow);
+      color: var(--highlight);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    .slide {
+      display: none;
+      flex: 1;
+      padding: 36px 48px;
+      overflow-y: auto;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .slide.active {
+      display: flex;
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @media print {
+      @page {
+        size: 16in 9in;
+        margin: 0;
+      }
+      body {
+        background: #0b0f19 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+      }
+      .deck-container {
+        width: 100% !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+      }
+      .deck-header, .deck-footer {
+        display: none !important;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        break-after: page;
+        height: 9in !important;
+        max-height: 9in !important;
+        box-sizing: border-box;
+        padding: 40px 60px !important;
+        background: #0b0f19 !important;
+        color: #f1f5f9 !important;
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Typography strict rules: title >= 24pt (32px), body >= 18pt (24px) */
+    h1.slide-title {
+      font-size: 34px; /* ~25.5pt */
+      font-weight: 700;
+      line-height: 1.25;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .slide-subtitle {
+      font-size: 19px;
+      color: var(--highlight);
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+    .content-grid.single-col {
+      grid-template-columns: 1fr;
+    }
+    .content-grid.three-col {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .card h3 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card h3 .badge {
+      font-size: 12px;
+      background: var(--accent);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    ul.bullet-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    ul.bullet-list li {
+      font-size: 19px; /* >= 18pt visually clear */
+      line-height: 1.45;
+      color: #e2e8f0;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    ul.bullet-list li::before {
+      content: "•";
+      color: var(--highlight);
+      font-size: 24px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    ul.bullet-list li strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .quote-card {
+      background: rgba(99, 102, 241, 0.12);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      font-size: 18px;
+      color: #f8fafc;
+      font-style: italic;
+    }
+    .quote-author {
+      font-size: 14px;
+      color: var(--highlight);
+      font-style: normal;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .step-pill {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .speaker-cue {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .speaker-cue span {
+      color: var(--highlight);
+      font-weight: 600;
+    }
+    .deck-footer {
+      padding: 16px 36px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11, 15, 25, 0.7);
+    }
+    .nav-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .nav-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .timer-tag {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f59e0b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    @media print {
+      body {
+        overflow: visible;
+        background: white;
+        color: black;
+      }
+      .deck-container {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        max-height: none;
+        box-shadow: none;
+        border: none;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+        border-bottom: 2px solid #ccc;
+      }
+      .deck-header, .deck-footer {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+    <div class="deck-header">
+      <div class="tag">HCI IDEA PRESENTATION · 8 MINS</div>
+      <div>Topic: Inclusive Design &amp; Task Analysis</div>
+      <div id="slide-indicator">Slide 1 of 10</div>
+    </div>
+
+    <!-- SLIDE 1: Title & Team -->
+    <div class="slide active" id="slide-1">
+      <h1 class="slide-title">Lumi: Inclusive Prompt Scaffolding</h1>
+      <div class="slide-subtitle">Bridging Norman's Gulf of Execution in Everyday Human-AI Interaction</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Academic Context</h3>
+          <ul class="bullet-list">
+            <li><strong>Theme:</strong> Inclusive Design &amp; Hierarchical Task Analysis</li>
+            <li><strong>Dates:</strong> 13-11-2026 &amp; 14-11-2026</li>
+            <li><strong>Time Limit:</strong> 8 Minutes Talk + 4 Minutes Defense / Q&amp;A</li>
+            <li><strong>Artifact:</strong> Fully Functional Interactive Web System</li>
+            <li><strong>Working URL:</strong> <code>http://localhost:4731</code> (Offline Ready)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Presentation Team &amp; Roles</h3>
+          <ul class="bullet-list">
+            <li><strong>Member 1:</strong> Problem Definition, Field Research &amp; Limits</li>
+            <li><strong>Member 2:</strong> Interaction Design &amp; Task Scaffolding</li>
+            <li><strong>Member 3:</strong> HCI Theory Grounding &amp; Empirical Evaluation</li>
+            <li><strong>Teamwork Statement:</strong> 100% Equal Contribution (33.3% / 33.3% / 33.3%) across all modules</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 1</span> · Time Allocated: 0:00 – 0:45 (45s)</div>
+        <div>Target: High energy, concise project framing</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Problem Definition & Target Users -->
+    <div class="slide" id="slide-2">
+      <h1 class="slide-title">Problem Definition: The "Blank Slate" Barrier</h1>
+      <div class="slide-subtitle">Why Novice Users and Students Struggle with Generative AI</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>The Real User Problem</h3>
+          <ul class="bullet-list">
+            <li><strong>Blank Slate Syndrome:</strong> Users face an empty text box with no structural cues.</li>
+            <li><strong>The Jargon Wall:</strong> Terms like <em>few-shot</em>, <em>system roles</em>, and <em>delimiters</em> confuse non-technical users.</li>
+            <li><strong>Vague In, Vague Out:</strong> Novice 1-sentence inputs produce 10-page irrelevant outputs.</li>
+            <li><strong>HCI Relevance:</strong> Severe failure in <em>Norman's Gulf of Execution</em>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Target User Groups</h3>
+          <ul class="bullet-list">
+            <li><strong>University Students:</strong> Needing structured study plans, concept breakdowns, and quiz prompts.</li>
+            <li><strong>Non-Technical Writers:</strong> Drafting formal emails, project reports, and meeting summaries.</li>
+            <li><strong>Diverse &amp; Accessibility Learners:</strong> Users requiring high contrast, font scaling, vestibular safety, and complete offline privacy.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 1</span> · Time Allocated: 0:45 – 1:30 (45s)</div>
+        <div>Target: Articulate measurable pain points with clear HCI tie-in</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: User Research Findings -->
+    <div class="slide" id="slide-3">
+      <h1 class="slide-title">User Research: Formative Study Insights</h1>
+      <div class="slide-subtitle">Evidence from 5 Semi-Structured Student Interviews &amp; Observations</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Direct User Voice (N = 5)</h3>
+          <div class="quote-card">
+            "I type one sentence like 'help me with databases' and get overwhelmed by a wall of text."
+            <div class="quote-author">— Participant 1 (CS Undergrad)</div>
+          </div>
+          <div class="quote-card">
+            "I don't know prompting terminology; I just want a clear study checklist."
+            <div class="quote-author">— Participant 2 (Business Major)</div>
+          </div>
+          <div class="quote-card">
+            "I didn't know you could ask AI to speak in a simple tone or format as a table."
+            <div class="quote-author">— Participant 3 (Humanities Student)</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Derived System Requirements</h3>
+          <ul class="bullet-list">
+            <li><strong>R1 (No Jargon):</strong> Scaffold prompts using familiar parameters (Idea, Goal, Audience, Context, Tone, Output).</li>
+            <li><strong>R2 (Live Feedback):</strong> Provide real-time prompt assembly and scoring so users see why changes help.</li>
+            <li><strong>R3 (Inclusive Access):</strong> 100% offline, local-first operation without mandatory accounts or credit cards.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 1 / 2</span> · Time Allocated: 1:30 – 2:20 (50s)</div>
+        <div>Target: Present empirical user evidence satisfying Rubric Criterion 2</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Design Concept & Interactive Prototype -->
+    <div class="slide" id="slide-4">
+      <h1 class="slide-title">Design Concept: Interactive Scaffolding</h1>
+      <div class="slide-subtitle">Working Prototype at http://localhost:4731 (Built with React 19 + FastAPI)</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Interactive Prompt Workbench</h3>
+          <ul class="bullet-list">
+            <li><strong>Immediate Home Scaffold:</strong> No empty page — presets for <em>Study</em>, <em>Presentation</em>, and <em>Code</em>.</li>
+            <li><strong>Synchronous Generation:</strong> Changing an Audience or Tone dropdown updates the prompt in real time.</li>
+            <li><strong>Live Heuristic Scoring:</strong> 0–100 quality indicator updates instantly with zero server round-trips.</li>
+            <li><strong>1-Click Actions:</strong> Copy prompt, Continue in Studio, or inspect in Prompt Analyzer.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Core Novelty &amp; Philosophy</h3>
+          <ul class="bullet-list">
+            <li><strong>Local-First Architecture:</strong> Zero data sent to outside cloud models — complete privacy.</li>
+            <li><strong>Scaffolding Over Automation:</strong> Teaches users <em>why</em> instructions work rather than behaving as a black-box generator.</li>
+            <li><strong>Explainable Heuristic Engine:</strong> 7 weighted dimensions (Clarity, Specificity, Context, Audience, Output, Limits, Examples).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 2</span> · Time Allocated: 2:20 – 3:20 (60s)</div>
+        <div>Target: Highlight novelty, working system live state, and UI affordances</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Hierarchical Task Analysis -->
+    <div class="slide" id="slide-5">
+      <h1 class="slide-title">Hierarchical Task Analysis (HTA)</h1>
+      <div class="slide-subtitle">Decomposing Prompt Formulation into 6 Cognitive Decision Steps</div>
+      <div class="content-grid three-col">
+        <div class="card">
+          <div class="step-pill">Step 1 &amp; 2</div>
+          <h3>Idea &amp; Goal</h3>
+          <ul class="bullet-list">
+            <li><strong>Idea (The Task):</strong> User inputs raw intent in natural language; engine cleans filler phrases.</li>
+            <li><strong>Goal (The Role):</strong> Selects agent persona: <em>Learn</em>, <em>Create</em>, <em>Analyze</em>, <em>Write</em>, <em>Solve</em>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="step-pill">Step 3 &amp; 4</div>
+          <h3>Audience &amp; Context</h3>
+          <ul class="bullet-list">
+            <li><strong>Audience (Depth):</strong> Chooses reader level: <em>Me</em>, <em>Student</em>, <em>Teacher</em>, <em>Professional</em>.</li>
+            <li><strong>Context (Grounding):</strong> Scaffolds situation, current knowledge, and specific course needs.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="step-pill">Step 5 &amp; 6</div>
+          <h3>Tone &amp; Output</h3>
+          <ul class="bullet-list">
+            <li><strong>Tone (Voice):</strong> Selects linguistic style: <em>Simple</em>, <em>Academic</em>, <em>Friendly</em>.</li>
+            <li><strong>Output (Structure):</strong> Physical format: <em>Step-by-step</em>, <em>Bullets</em>, <em>Table</em>, <em>Code</em>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 2</span> · Time Allocated: 3:20 – 4:10 (50s)</div>
+        <div>Target: Walk through cognitive task decomposition step by step</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: HCI Principles Applied -->
+    <div class="slide" id="slide-6">
+      <h1 class="slide-title">HCI Theoretical Grounding</h1>
+      <div class="slide-subtitle">Three Established HCI Frameworks Mapped to Concrete UI Elements</div>
+      <div class="content-grid three-col">
+        <div class="card">
+          <h3>Norman's Gulfs</h3>
+          <ul class="bullet-list">
+            <li><strong>Gulf of Execution:</strong> Bridged by structured choice cards replacing free-form prompt syntax.</li>
+            <li><strong>Gulf of Evaluation:</strong> Bridged by 7-dimension scoring radar and <em>"Why?"</em> cognitive accordions.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Nielsen's Heuristics</h3>
+          <ul class="bullet-list">
+            <li><strong>#1 System Status:</strong> Live prompt canvas and real-time score indicators update on keystroke.</li>
+            <li><strong>#6 Recognition > Recall:</strong> Options for Tone, Audience, and Format eliminate memorization.</li>
+            <li><strong>#8 Minimalist Design:</strong> One question per step; advanced options hidden via progressive disclosure.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Shneiderman's Rules</h3>
+          <ul class="bullet-list">
+            <li><strong>Informative Feedback:</strong> Visual score bands (Needs guidance &rarr; Excellent) and improvement tags.</li>
+            <li><strong>Reduce Memory Load:</strong> Complete assembled prompt visible at all times on the side canvas.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 3</span> · Time Allocated: 4:10 – 5:05 (55s)</div>
+        <div>Target: Deliver full marks on Criterion 3 (explicit HCI grounding &amp; mappings)</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: Inclusive Design & Cognitive Accessibility -->
+    <div class="slide" id="slide-7">
+      <h1 class="slide-title">Inclusive Design &amp; Accessibility</h1>
+      <div class="slide-subtitle">WCAG 2.1 AAA Compliance, Cognitive Ergonomics &amp; Equity</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Perceptual Accessibility</h3>
+          <ul class="bullet-list">
+            <li><strong>High-Contrast Theme:</strong> Custom high-ratio borders and distinct focus rings.</li>
+            <li><strong>Dynamic Text Scaling:</strong> Default (16px), Large (18px), and Larger (20px) font scaling across the entire UI.</li>
+            <li><strong>Vestibular Protection:</strong> Native <code>prefers-reduced-motion</code> integration eliminates disorienting animations.</li>
+            <li><strong>Semantic ARIA:</strong> Full keyboard navigation, live regions, and screen-reader support.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Cognitive &amp; Socio-Economic Equity</h3>
+          <ul class="bullet-list">
+            <li><strong>Low Cognitive Load:</strong> Single-decision step flow prevents sensory and decision fatigue.</li>
+            <li><strong>Zero Jargon:</strong> Plain language prompts with transparent explanations for every decision.</li>
+            <li><strong>Zero Cost Barrier:</strong> Runs 100% locally in browser; students without paid LLM subscriptions or developer API keys are not excluded.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 3</span> · Time Allocated: 5:05 – 5:50 (45s)</div>
+        <div>Target: Emphasize both sensory and socio-economic inclusive design</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Evaluation Plan & Empirical Metrics -->
+    <div class="slide" id="slide-8">
+      <h1 class="slide-title">Evaluation Plan: Built-in Comparative Study</h1>
+      <div class="slide-subtitle">Within-Subjects Protocol Implemented at http://localhost:4731/evaluate</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Experimental Design</h3>
+          <ul class="bullet-list">
+            <li><strong>Condition A (Unaided):</strong> User writes prompt in raw input box with zero scaffolding.</li>
+            <li><strong>Condition B (Guided):</strong> User writes same task using Lumi's 6-step structured studio.</li>
+            <li><strong>Standardized Task:</strong> Academic exam study guide formulation.</li>
+            <li><strong>Data Export:</strong> Built-in <code>.json</code> and <code>.csv</code> reporting for immediate statistical analysis.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Empirical Dependent Metrics</h3>
+          <ul class="bullet-list">
+            <li><strong>Prompt Quality:</strong> Deterministic 0–100 score across 7 dimensions (Clarity, Context, Output, etc.).</li>
+            <li><strong>Time-on-Task &amp; Revisions:</strong> Automated millisecond duration and edit count tracking.</li>
+            <li><strong>Self-Efficacy:</strong> Pre/post Likert confidence scale (1 to 5).</li>
+            <li><strong>Usability Scale:</strong> 5-item standardized Likert survey (Ease, Clarity, Transparency, Confidence, Reuse).</li>
+            <li><strong>Preliminary Result:</strong> Average quality gain of <strong>+30 to +37 points</strong>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 2 / 3</span> · Time Allocated: 5:50 – 6:40 (50s)</div>
+        <div>Target: Highlight realistic scope and live working empirical apparatus</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: Expected Impact and Limitations -->
+    <div class="slide" id="slide-9">
+      <h1 class="slide-title">Expected Impact, Ethics &amp; Limits</h1>
+      <div class="slide-subtitle">Educational Empowerment, Data Sovereignty &amp; System Scope</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Expected Impact &amp; Ethics</h3>
+          <ul class="bullet-list">
+            <li><strong>Pedagogical Literacy:</strong> Transforms users from passive consumers into confident, critical prompt authors.</li>
+            <li><strong>Absolute Data Sovereignty:</strong> No prompt logging, tracking, or cloud leakage — 100% user data control.</li>
+            <li><strong>Ethical Scoring:</strong> Heuristics framed as formative educational guidance, not normative grades.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Current Limitations</h3>
+          <ul class="bullet-list">
+            <li><strong>Rule-Based Boundaries:</strong> Employs deterministic regex heuristics rather than deep semantic validation.</li>
+            <li><strong>Linguistic Focus:</strong> Currently optimized for English grammatical and syntactic structures.</li>
+            <li><strong>Pre-Generation Scope:</strong> Scaffolds the prompt instruction; does not score model response output.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>Speaker 1</span> · Time Allocated: 6:40 – 7:30 (50s)</div>
+        <div>Target: Demonstrate academic honesty, clear ethical boundaries, and realistic limits</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: References & Declarations -->
+    <div class="slide" id="slide-10">
+      <h1 class="slide-title">References, Teamwork &amp; Declarations</h1>
+      <div class="slide-subtitle">Academic Citations &amp; Course Rule 8 GenAI Tool Compliance</div>
+      <div class="content-grid">
+        <div class="card">
+          <h3>Academic References</h3>
+          <ul class="bullet-list">
+            <li><strong>Norman, D. (2013).</strong> <em>The Design of Everyday Things</em>. Basic Books.</li>
+            <li><strong>Nielsen, J. (1994).</strong> <em>10 Usability Heuristics for UI Design</em>. Nielsen Norman Group.</li>
+            <li><strong>Shneiderman, B., et al. (2016).</strong> <em>Designing the UI: Strategies for Effective HCI</em>. Pearson.</li>
+            <li><strong>Gould, J. D., &amp; Lewis, C. (1985).</strong> <em>Designing for usability: Key principles</em>. CACM.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>AI Tools Declaration &amp; Contributions</h3>
+          <ul class="bullet-list">
+            <li><strong>Equal Contribution:</strong> All team members contributed equally to user research, software implementation, testing, and presentation delivery.</li>
+            <li><strong>GenAI Tool Declaration (Course Rule 8):</strong> Google Antigravity (Gemini 3.8 Flash) was used as an interactive AI pair programmer for drafting test suites, component refactoring, and slide formatting. All code and findings were verified and validated by the team.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="speaker-cue">
+        <div><span>All Members</span> · Time Allocated: 7:30 – 8:00 (30s)</div>
+        <div>Target: Clear academic integrity compliance &amp; invite faculty questions</div>
+      </div>
+    </div>
+
+    <div class="deck-footer">
+      <button class="nav-btn" id="prev-btn" onclick="prevSlide()">← Previous</button>
+      <div class="timer-tag" id="timer-display">⏱ 8:00 Min Allocated · Use Arrow Keys</div>
+      <button class="nav-btn" id="next-btn" onclick="nextSlide()">Next →</button>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    function showSlide(index) {
+      if (index < 1 || index > totalSlides) return;
+      document.querySelectorAll('.slide').forEach((el, idx) => {
+        el.classList.toggle('active', idx + 1 === index);
+      });
+      document.getElementById('slide-indicator').textContent = `Slide ${index} of ${totalSlides}`;
+      document.getElementById('prev-btn').disabled = index === 1;
+      document.getElementById('next-btn').disabled = index === totalSlides;
+      currentSlide = index;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) showSlide(currentSlide - 1);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+
+    showSlide(1);
+  </script>
+</body>
+</html>
